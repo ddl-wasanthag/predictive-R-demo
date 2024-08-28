@@ -123,18 +123,3 @@ commit_message <- "R model registered. Commiting now"
 system(paste("git commit -m", shQuote(commit_message)))
 system("git push")
 
-# Define the API function to predict based on the input data
-# To call model use: {"data": {"x": value}}
-predict <- function(x) {
-  # Load the trained model (assuming you saved it earlier)
-  model <- readRDS("linear_model.rds")
-  
-  # Make the prediction
-  prediction <- predict(model, newdata = data.frame(x = x))
-  
-  # Introduce slight variability by adding a small random noise
-  noise <- rnorm(1, mean = 0, sd = 0.5)  # Adjust the standard deviation to control variability
-  prediction <- prediction + noise
-  
-  return(list(prediction = prediction))
-}
