@@ -8,7 +8,7 @@ library(DominoDataR)
 
 
 # Set up MLflow experiment
-mlflow_set_experiment("Simple-Linear-Regression-model-demo2")
+mlflow_set_experiment("Simple-Linear-Regression-model")
 
 # Start an MLFlow run
 mlflow_start_run()
@@ -66,26 +66,24 @@ mlflow_log_artifact(local_file_path, "plots")
 client <- DominoDataR::datasource_client()
 
 # Upload the PNG file to the specified bucket
-#DominoDataR::put_object(client, "SE-Demo-Bucket", "regression_plot.png", local_file_path)
+DominoDataR::put_object(client, "SE-Demo-Bucket", "regression_plot.png", local_file_path)
 
 # Save the model as an RDS file
-model_path <- "/mnt/code/linear_model.rds"
+model_path <- "/mnt/linear_model.rds"
 saveRDS(model, file = model_path)
 
 # Log the RDS file as an artifact in MLFlow
-mlflow_log_artifact(model_path, artifact_path = "models")
+r_model_path <- "/mnt/model.R"
+mlflow_log_artifact(r_model_path, artifact_path = "models")
 
 # Log the model.R file as an artifact in MLFlow
-r_model_path <- "/mnt/code/pred_model_updated.R"
-mlflow_log_artifact(r_model_path, artifact_path = "code")
-
-
-
-# Get the current run ID using R's mlflow_get_run() - CHANGED
-run_id <- mlflow_get_run()$run_id  # CHANGED
+mlflow_log_artifact(model_path, artifact_path = "models")
 
 # End the MLFlow run
 mlflow_end_run()
+
+# Get the current run ID using R's mlflow_get_run() - CHANGED
+run_id <- mlflow_get_run()$run_id  # CHANGED
 
 # Call python mlflow to register the model
 use_python("/opt/conda/bin/python", required = TRUE)
@@ -117,11 +115,7 @@ py_run_string(register_model_code)  # CHANGED
 py_register_model <- py$register_model  # CHANGED
 py_register_model(run_id, "linear_model.rds", "R_Mlflow_Model")  # CHANGED
 
-#commit the local RDS file to the git repository
-system("git add .")
-commit_message <- "R model registered. Commiting now"
-system(paste("git commit -m", shQuote(commit_message)))
-system("git push")
+
 
 # Define the API function to predict based on the input data
 # To call model use: {"data": {"x": value}}
